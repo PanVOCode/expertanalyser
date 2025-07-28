@@ -47,8 +47,14 @@ CREATE_VIRALITY_SUMMARY_REPORT = True
 #### aiconfig.py - Настройки AI (DeepSeek через OpenRouter)
 
 ```python
-# API ключ для OpenRouter (DeepSeek)
-DEEPSEEK_API_KEY = "your-api-key-here"
+# Импортируем API ключи из отдельного файла
+try:
+    from api_keys import get_deepseek_api_key
+    DEEPSEEK_API_KEY = get_deepseek_api_key()
+except ImportError:
+    # Fallback если файл api_keys.py не найден
+    import os
+    DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', "")
 
 # Базовый URL API OpenRouter
 DEEPSEEK_BASE_URL = "https://openrouter.ai/api"
@@ -65,6 +71,26 @@ REQUEST_TIMEOUT = 30
 DEFAULT_SYSTEM_PROMPT = load_system_prompt()
 ```
 
+#### api_keys.py - API ключи (не отслеживается Git)
+
+Файл содержит все API ключи для различных сервисов. **Добавлен в .gitignore для безопасности.**
+
+```python
+# Telegram API
+TELEGRAM_API_ID = "ваш_telegram_api_id"
+TELEGRAM_API_HASH = "ваш_telegram_api_hash"
+
+# DeepSeek API через OpenRouter
+DEEPSEEK_API_KEY = "ваш_deepseek_api_key"
+
+# Другие API ключи...
+```
+
+**Для настройки:**
+1. Скопируйте `api_keys_example.py` как `api_keys.py`
+2. Заполните своими API ключами
+3. Файл автоматически игнорируется Git'ом
+
 #### system_prompt.txt - Системный промпт для AI
 
 Файл содержит детальный промпт для оценки компетентности авторов каналов. Включает:
@@ -78,28 +104,28 @@ DEFAULT_SYSTEM_PROMPT = load_system_prompt()
 #### 1. Анализ одного канала
 
 ```bash
-python analyse.py
+python files/code/analyse.py
 ```
 
 Функция `analyse(channel_url)` принимает ссылку на канал и:
 
-- Создает папку `all_folders/{channel_name}/`
+- Создает папку `results/all_folders/{channel_name}/`
 - Сохраняет `posts.xlsx` с данными
 - Возвращает текст топ-5 постов для AI анализа
 
 #### 2. Пакетный анализ каналов из CSV
 
 ```bash
-python main.py
+python files/code/main.py
 ```
 
-Читает `tgstat.csv` и для каждого канала:
+Читает `files/tgstat.csv` и для каждого канала:
 
 - Вызывает `analyse(channel_url)`
 - Отправляет топ-5 постов в AI
-- Сохраняет результаты в `analysis_results.csv`
+- Сохраняет результаты в `results/analysis_results.csv`
 
-Формат `tgstat.csv`:
+Формат `files/tgstat.csv`:
 
 ```csv
 column1;column2;https://t.me/channel_name;column4
@@ -108,20 +134,20 @@ column1;column2;https://t.me/channel_name;column4
 #### 3. AI анализ уже скачанных данных
 
 ```bash
-python analyze_all_folders.py
+python files/code/analyze_all_folders.py
 ```
 
-Обрабатывает все папки в `all_folders/`:
+Обрабатывает все папки в `results/all_folders/`:
 
 - Читает `posts.xlsx` из каждой папки
 - Извлекает топ-5 постов
 - Отправляет в AI для анализа
-- Сохраняет в `analysis_results_all_folders.csv`
+- Сохраняет в `results/analysis_results_all_folders.csv`
 
 #### 4. Тестирование AI API
 
 ```bash
-python test_deepseek.py
+python files/code/test_deepseek.py
 ```
 
 Проверяет подключение к DeepSeek API через OpenRouter.
@@ -130,22 +156,38 @@ python test_deepseek.py
 
 ```
 master/analyser/
-├── config.py                    # Основные настройки
-├── aiconfig.py                  # Настройки AI
-├── system_prompt.txt            # Системный промпт для AI
-├── analyse.py                   # Основная логика анализа
-├── ai.py                        # Функции для работы с AI
-├── main.py                      # Пакетный анализ из CSV
-├── analyze_all_folders.py       # AI анализ существующих данных
-├── test_deepseek.py             # Тест AI API
-├── tgstat.csv                   # Список каналов для анализа
-├── all_folders/                 # Папка с результатами анализа
-│   ├── channel1/
-│   │   ├── posts.xlsx
-│   │   ├── posts_sorted_by_*.xlsx
-│   │   └── virality_summary_report.xlsx
-│   └── channel2/
-└── analysis_results.csv         # Результаты AI анализа
+├── files/                       # Все файлы проекта
+│   ├── code/                    # Исходный код
+│   │   ├── analyse.py           # Основная логика анализа
+│   │   ├── ai.py                # Функции для работы с AI
+│   │   ├── main.py              # Пакетный анализ из CSV
+│   │   ├── analyze_all_folders.py # AI анализ существующих данных
+│   │   ├── test_deepseek.py     # Тест AI API
+│   │   ├── test_api_alternative.py # Альтернативный тест API
+│   │   └── test_api_simple.py   # Простой тест API
+│   ├── config/                  # Конфигурационные файлы
+│   │   ├── config.py            # Основные настройки анализа
+│   │   ├── aiconfig.py          # Настройки AI
+│   │   ├── api_keys.py          # API ключи (не отслеживается Git)
+│   │   ├── api_keys_example.py  # Пример файла API ключей
+│   │   └── system_prompt.txt    # Системный промпт для AI
+│   ├── docs/                    # Документация
+│   │   ├── API_SETUP.md         # Настройка API
+│   │   └── SETUP.md             # Инструкции по настройке
+│   └── tgstat.csv               # Список каналов для анализа
+├── results/                     # Результаты анализа
+│   ├── all_folders/             # Папка с результатами анализа каналов
+│   │   ├── channel1/
+│   │   │   ├── posts.xlsx
+│   │   │   ├── posts_sorted_by_*.xlsx
+│   │   │   └── virality_summary_report.xlsx
+│   │   └── channel2/
+│   ├── analysis_results.csv     # Результаты AI анализа
+│   ├── analysis_results_all_folders.csv # Результаты AI анализа существующих данных
+│   └── *.xlsx                   # Дополнительные отчеты
+├── README.md                    # Основная документация
+├── QUICK_START.md               # Быстрый старт
+└── .gitignore                   # Игнорируемые файлы
 ```
 
 ## 2. Описание формул расчета и логики приложения
