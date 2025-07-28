@@ -597,7 +597,7 @@ def analyse(channel_url):
         df = pd.concat([df, pd.DataFrame([total_row, avg_row])], ignore_index=True)
         
         # Сохраняем основной файл
-        save_to_excel(df, out_dir / 'posts.xlsx', channel_username, start_date, end_date)
+        save_to_excel(df, 'posts.xlsx', channel_username, start_date, end_date)
         
         # Создание дополнительных файлов с разными типами сортировки
         if CREATE_MULTIPLE_SORTED_FILES:
@@ -606,7 +606,53 @@ def analyse(channel_url):
             def save_to_excel_dir(df, filename, channel_username, start_date, end_date):
                 # Сохраняем в папку канала в results/all_folders
                 file_path = out_dir / filename
-                save_to_excel(df, file_path, channel_username, start_date, end_date)
+                # Создаем временную функцию для сохранения в конкретную папку
+                def save_to_excel_temp(df, filename, channel_username, start_date, end_date):
+                    wb = Workbook()
+                    ws = wb.active
+                    ws.title = "Posts"
+                    
+                    # Добавляем данные
+                    for r in dataframe_to_rows(df, index=False, header=True):
+                        ws.append(r)
+                    
+                    # Форматирование заголовков
+                    header_font = Font(bold=True, color="FFFFFF")
+                    header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+                    header_alignment = Alignment(horizontal="center", vertical="center")
+                    
+                    for cell in ws[1]:
+                        cell.font = header_font
+                        cell.fill = header_fill
+                        cell.alignment = header_alignment
+                    
+                    # Автоматическая ширина столбцов
+                    for column in ws.columns:
+                        max_length = 0
+                        column_letter = column[0].column_letter
+                        for cell in column:
+                            try:
+                                if len(str(cell.value)) > max_length:
+                                    max_length = len(str(cell.value))
+                            except:
+                                pass
+                        adjusted_width = min(max_length + 2, 50)
+                        ws.column_dimensions[column_letter].width = adjusted_width
+                    
+                    # Закрепляем заголовки
+                    ws.freeze_panes = "A2"
+                    
+                    # Добавляем информацию о канале и периоде
+                    ws.insert_rows(1, 3)
+                    ws['A1'] = f"Канал: {channel_username}"
+                    ws['A2'] = f"Период: {start_date.strftime('%d.%m.%Y')} - {end_date.strftime('%d.%m.%Y')}"
+                    ws['A3'] = f"Всего постов: {len(df)}"
+                    
+                    # Сохраняем файл
+                    wb.save(file_path)
+                    print(f"Файл сохранен: {file_path}")
+                
+                save_to_excel_temp(df, filename, channel_username, start_date, end_date)
             
             # Сохраняем оригинальную функцию и заменяем её
             old_save_to_excel = save_to_excel
