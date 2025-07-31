@@ -17,7 +17,7 @@ start_date = datetime(2025, 1, 1, tzinfo=timezone.utc)
 end_date = datetime(2025, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
 
 # Учитывать только текстовые сообщения в статистике
-only_text = True
+only_text = False
 
 # Тип сортировки по умолчанию
 # Доступные варианты: 'default', 'coefficient', 'engagement', 'forwards', 'reactions', 'views', 'date'

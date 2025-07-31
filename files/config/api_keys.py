@@ -7,7 +7,7 @@ TELEGRAM_API_ID = "25375051"
 TELEGRAM_API_HASH = "21e559fec16a53d6aa423eda559147d5"
 
 # DeepSeek API через OpenRouter (получить на https://openrouter.ai)
-DEEPSEEK_API_KEY = "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"
+DEEPSEEK_API_KEY = "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"
 
 # Альтернативные API ключи (закомментированы, раскомментируйте при необходимости)
 
